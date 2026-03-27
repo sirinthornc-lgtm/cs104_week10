@@ -54,4 +54,12 @@ def customers():
 
 @app.route("/menu")
 def menu():
-    return render_template("menu.html")
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM menu")
+    data = cur.fetchall()
+
+    conn.close()
+
+    return render_template("menu.html", menu=data)
