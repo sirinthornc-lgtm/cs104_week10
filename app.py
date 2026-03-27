@@ -1,10 +1,15 @@
 from flask import Flask, render_template, request, redirect
 import sqlite3
+import os
 
 app = Flask(__name__)
 
+# ✅ แก้ path database
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, 'coffee_shop.db')
+
 def get_db():
-    return sqlite3.connect("coffee_shop.db")
+    return sqlite3.connect(db_path)
 
 @app.route("/")
 def register():
@@ -17,18 +22,19 @@ def add_customer():
     phone = request.form["phone"]
     level = request.form["member_level"]
 
-    # Auto-generate customer ID
     conn = get_db()
     cur = conn.cursor()
+
     cur.execute("SELECT COUNT(*) FROM customers")
     count = cur.fetchone()[0]
-    customer_id = f"CUST{count + 1:04d}"  # Format: CUST0001, CUST0002, etc.
+    customer_id = f"CUST{count + 1:04d}"
 
     cur.execute("""
         INSERT INTO customers
         (customer_id, name, email, phone, member_level)
         VALUES (?, ?, ?, ?, ?)
     """, (customer_id, name, email, phone, level))
+
     conn.commit()
     conn.close()
 
@@ -38,10 +44,14 @@ def add_customer():
 def customers():
     conn = get_db()
     cur = conn.cursor()
+
     cur.execute("SELECT * FROM customers")
     data = cur.fetchall()
+
     conn.close()
 
     return render_template("customers.html", customers=data)
 
-app.run(debug=True)
+@app.route("/menu")
+def menu():
+    return render_template("menu.html")
